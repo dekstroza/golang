@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 
-	"github.com/dekstroza/golang/go-payments/main/models"
+	"github.com/dekstroza/golang/go-payments/models"
 	"github.com/jinzhu/gorm"
 
 	//Import postgres dialect

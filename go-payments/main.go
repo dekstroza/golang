@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/dekstroza/golang/go-payments/main/contexts"
-	"github.com/dekstroza/golang/go-payments/main/database"
+	"github.com/dekstroza/golang/go-payments/contexts"
+	"github.com/dekstroza/golang/go-payments/database"
 	"github.com/gocraft/web"
 )
 
