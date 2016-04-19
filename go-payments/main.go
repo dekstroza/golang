@@ -10,12 +10,13 @@ import (
 
 func main() {
 	database.InitDB()
-	database.CreateUser()
 
 	router := web.New(contexts.Context{})
 	router.Middleware(web.LoggerMiddleware)
 	router.Middleware(web.ShowErrorsMiddleware)
 	router.Get("/", (*contexts.Context).Root)
-	router.Get("/list", (*contexts.Context).List)
+	router.Get("/users", (*contexts.Context).List)
+	router.Get("/users/:id", (*contexts.Context).FindUser)
+	router.Post("/users", (*contexts.Context).InsertUser)
 	http.ListenAndServe("localhost:3000", router)
 }

@@ -1,8 +1,6 @@
 package database
 
 import (
-	"fmt"
-
 	"github.com/dekstroza/golang/go-payments/models"
 	"github.com/jinzhu/gorm"
 
@@ -21,13 +19,5 @@ func InitDB() {
 		panic("failed to connect database")
 	}
 	DB.AutoMigrate(&models.ApplicationUser{})
-	DB.Debug()
-	fmt.Println("Done init.")
 
-}
-
-//CreateUser will create user
-func CreateUser() {
-	u := models.ApplicationUser{Firstname: "Deki", Lastname: "Kitic"}
-	DB.Create(&u)
 }
