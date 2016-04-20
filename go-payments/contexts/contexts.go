@@ -9,6 +9,7 @@ import (
 	"github.com/dekstroza/golang/go-payments/database"
 	"github.com/dekstroza/golang/go-payments/models"
 	"github.com/gocraft/web"
+	"github.com/twinj/uuid"
 )
 
 //Context structure containing number of counts a message should be repeated.
@@ -30,7 +31,7 @@ func (c *Context) FindUser(rw web.ResponseWriter, req *web.Request) {
 	} else {
 		user := models.ApplicationUser{}
 		database.DB.First(&user, ID)
-		if user.ID == 0 {
+		if user.ID == "" {
 			rw.WriteHeader(http.StatusNotFound)
 		} else {
 			jsonUser, _ := json.Marshal(user)
@@ -66,8 +67,17 @@ func (c *Context) InsertUser(rw web.ResponseWriter, req *web.Request) {
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 	} else {
+		user.ID = uuid.NewV4().String()
 		database.DB.Create(&user)
-		rw.Header().Set("Location", "http://"+req.Host+":3000"+req.RequestURI+"/"+strconv.FormatUint(user.ID, 10))
+		rw.Header().Set("X-Xss-Protection", "1")
+		rw.Header().Set("X-Frame-Options", "SAMEORIGIN")
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		rw.Header().Set("Vary", "Origin; X-Origin")
+		rw.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Authorization, Content-Type")
+		rw.Header().Set("Connection", "keep-alive")
+		rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		rw.Header().Set("Access-Control-Max-Age", "3600")
+		rw.Header().Set("Location", "http://"+req.Host+":3000"+req.RequestURI+"/"+user.ID)
 		rw.WriteHeader(http.StatusCreated)
 	}
 }

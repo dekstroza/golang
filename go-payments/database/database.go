@@ -14,10 +14,12 @@ var err error
 
 //InitDB will initilize database connection
 func InitDB() {
-	DB, err = gorm.Open("postgres", "host=172.18.0.2 user=postgres password=mysecretpassword dbname=postgres sslmode=disable")
+	DB, err = gorm.Open("postgres", "host=10.211.55.33 user=postgres password=mysecretpassword dbname=postgres sslmode=disable")
 	if err != nil {
 		panic("failed to connect database")
 	}
+	DB.DB().SetMaxIdleConns(20)
+	DB.DB().SetMaxOpenConns(60)
 	DB.AutoMigrate(&models.ApplicationUser{})
 
 }
