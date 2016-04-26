@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/dekstroza/golang/go-payments/database"
 	"github.com/dekstroza/golang/go-payments/models"
@@ -12,32 +11,37 @@ import (
 	"github.com/twinj/uuid"
 )
 
-//Context structure containing number of counts a message should be repeated.
+//Context structure
 type Context struct {
 }
 
-//Root just print root
-func (c *Context) Root(rw web.ResponseWriter, r *web.Request) {
-	fmt.Println("Root")
+var serverPort int
+var serverIP string
+
+//CreateRestServer will create gocraft rest router
+func CreateRestServer(bindAddress *string, bindPort *int) *web.Router {
+	serverPort = *bindPort
+	serverIP = *bindAddress
+	router := web.New(Context{})
+	router.Middleware(web.LoggerMiddleware)
+	router.Get("/users", (*Context).List)
+	router.Get("/users/:id", (*Context).FindUser)
+	router.Post("/users", (*Context).InsertUser)
+	return router
 }
 
 //FindUser will find user with path param id and return json representation
 func (c *Context) FindUser(rw web.ResponseWriter, req *web.Request) {
-
 	userID := req.PathParams["id"]
-	ID, err := strconv.ParseUint(userID, 10, 64)
-	if err != nil {
-		rw.WriteHeader(http.StatusBadRequest)
+	user := models.ApplicationUser{}
+	database.DB.Where("id = ?", userID).Find(&user)
+	if user.ID == "" {
+		rw.WriteHeader(http.StatusNotFound)
 	} else {
-		user := models.ApplicationUser{}
-		database.DB.First(&user, ID)
-		if user.ID == "" {
-			rw.WriteHeader(http.StatusNotFound)
-		} else {
-			jsonUser, _ := json.Marshal(user)
-			rw.Header().Set("Content-Type", "application/json")
-			fmt.Fprint(rw, string(jsonUser))
-		}
+		jsonUser, _ := json.Marshal(user)
+		rw.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(rw, string(jsonUser))
+
 	}
 }
 
@@ -59,7 +63,7 @@ func (c *Context) List(rw web.ResponseWriter, req *web.Request) {
 
 }
 
-//InsertUser will insert new user from submited json
+//InsertUser into database using body formated as json
 func (c *Context) InsertUser(rw web.ResponseWriter, req *web.Request) {
 	user := models.ApplicationUser{}
 	decoder := json.NewDecoder(req.Body)
@@ -69,15 +73,7 @@ func (c *Context) InsertUser(rw web.ResponseWriter, req *web.Request) {
 	} else {
 		user.ID = uuid.NewV4().String()
 		database.DB.Create(&user)
-		rw.Header().Set("X-Xss-Protection", "1")
-		rw.Header().Set("X-Frame-Options", "SAMEORIGIN")
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
-		rw.Header().Set("Vary", "Origin; X-Origin")
-		rw.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Authorization, Content-Type")
-		rw.Header().Set("Connection", "keep-alive")
-		rw.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		rw.Header().Set("Access-Control-Max-Age", "3600")
-		rw.Header().Set("Location", "http://"+req.Host+":3000"+req.RequestURI+"/"+user.ID)
+		rw.Header().Set("Location", fmt.Sprintf("http://%s:%d%s%s", serverIP, serverPort, req.RequestURI, user.ID))
 		rw.WriteHeader(http.StatusCreated)
 	}
 }
